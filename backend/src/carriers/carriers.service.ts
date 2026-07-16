@@ -175,7 +175,7 @@ export class CarriersService {
       });
 
       // Also update compliance values if supplied
-      let updatedCompliance = null;
+      let updatedCompliance: any = null;
       const compExists = await tx.carrierCompliance.findUnique({ where: { carrierId: id } });
       if (compExists) {
         const complianceUpdate: any = { updatedBy: user.userId };
@@ -197,7 +197,7 @@ export class CarriersService {
           action: 'Updated carrier details',
           objectType: 'CARRIER',
           objectId: id,
-          previousValue,
+          previousValue: prevValue,
           newValue: JSON.stringify({ updatedOrg, updatedCompliance }),
         },
       });
