@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: loadflow-backend
+    env: node
+    plan: starter
+    rootDirectory: backend
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: file:/var/data/dev.db
+      - key: UPLOAD_PATH
+        value: /var/data/uploads
+      - key: FRONTEND_URL
+        value: https://loadflow-frontend.vercel.app
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PORT
+        value: 3000
+    disk:
+      name: loadflow-db-storage
+      mountPath: /var/data
+      sizeGB: 1
