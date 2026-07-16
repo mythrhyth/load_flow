@@ -6,7 +6,9 @@ import * as path from 'path';
 
 @Injectable()
 export class PodService {
-  private uploadDir = path.resolve(__dirname, '../../../../uploads/pods');
+  private uploadDir = process.env.UPLOAD_PATH
+    ? path.join(process.env.UPLOAD_PATH, 'pods')
+    : path.resolve(process.cwd(), '../uploads/pods');
 
   constructor(private prisma: PrismaService) {
     // Ensure upload directory exists
