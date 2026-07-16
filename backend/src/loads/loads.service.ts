@@ -515,7 +515,7 @@ export class LoadsService {
     }
 
     // Heuristic temperature parser
-    let temperature = undefined;
+    let temperature: number | undefined = undefined;
     const tempMatch = textLower.match(/(\d+)\s*(?:°f|f|degrees|degree|c|°c)/i) || textLower.match(/temp(?:erature)?(?:\s*at)?\s*(-?\d+)/i);
     if (tempMatch) {
       const t = parseFloat(tempMatch[1]);
