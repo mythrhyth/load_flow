@@ -224,7 +224,7 @@ export class RateConfirmationsService {
         action: 'Updated rate confirmation version details',
         objectType: 'RATE_CONFIRMATION',
         objectId: rc.rcNumber,
-        previousValue,
+        previousValue: prevValue,
         newValue: JSON.stringify(updated),
       },
     });
