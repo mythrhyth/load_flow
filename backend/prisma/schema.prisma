@@ -1,0 +1,256 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Organization {
+  id          String   @id @default(uuid())
+  name        String
+  type        String   // "BROKER" | "CARRIER" | "SHIPPER"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?
+  updatedBy   String?
+  deletedAt   DateTime?
+
+  users        User[]
+  invitations  Invitation[]
+  loadsAsShipper Load[] @relation("ShipperLoads")
+  loadsAsBroker  Load[] @relation("BrokerLoads")
+  loadsAsCarrier Load[] @relation("CarrierLoads")
+  roles        Role[]
+  compliance   CarrierCompliance?
+  auditLogs    AuditLog[]
+}
+
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  passwordHash   String
+  name           String
+  status         String   // "ACTIVE" | "INACTIVE" | "PENDING"
+  organizationId String
+  lastLogin      DateTime?
+  mfaEnabled     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  createdBy      String?
+  updatedBy      String?
+  deletedAt      DateTime?
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  roles          UserRole[]
+  timelineEvents ShipmentTimeline[]
+  refreshTokens  RefreshToken[]
+  notifications  Notification[]
+  auditLogs      AuditLog[]
+}
+
+model Role {
+  id             String   @id @default(uuid())
+  name           String
+  description    String?
+  organizationId String
+  isCustom       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  createdBy      String?
+  updatedBy      String?
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  permissions    RolePermission[]
+  users          UserRole[]
+  invitations    Invitation[]
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique // e.g. "load.create", "compliance.override"
+  description String?
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  id           String @id @default(uuid())
+  roleId       String
+  permissionId String
+
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+}
+
+model UserRole {
+  id        String @id @default(uuid())
+  userId    String
+  roleId    String
+
+  user      User @relation(fields: [userId], references: [id])
+  role      Role @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+}
+
+model Invitation {
+  id             String   @id @default(uuid())
+  email          String
+  roleId         String
+  organizationId String
+  token          String   @unique
+  status         String   // "PENDING" | "ACCEPTED" | "EXPIRED"
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  createdBy      String?
+  updatedBy      String?
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  role           Role         @relation(fields: [roleId], references: [id])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model CarrierCompliance {
+  id             String   @id @default(uuid())
+  carrierId      String   @unique
+  insuranceExpiry DateTime?
+  authorityStatus String   // "ACTIVE" | "INACTIVE" | "PENDING"
+  mcNumber       String?
+  dotNumber      String?
+  riskScore      Float    @default(0.0)
+  complianceScore Float   @default(100.0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  createdBy      String?
+  updatedBy      String?
+
+  carrier        Organization @relation(fields: [carrierId], references: [id])
+}
+
+model Load {
+  id                 String   @id @default(uuid())
+  loadNumber         String   @unique // e.g. "LD-2847"
+  shipperId          String
+  brokerId           String
+  carrierId          String?
+  origin             String
+  originAddress      String?
+  destination        String
+  destinationAddress String?
+  pickupDate         DateTime
+  pickupWindow       String?
+  deliveryDate       DateTime
+  deliveryWindow     String?
+  commodity          String
+  weight             Float
+  declaredValue      Float?
+  temperature        Float?
+  equipment          String   // "dry-van" | "reefer" | "flatbed"
+  hazmatClass        String?
+  notes              String?
+  status             String   // posted, assigned, rate-confirmed, dispatched, in-transit, delivered, pod-verified, closed
+  priority           String   // critical, high, medium, low
+  revenue            Float
+  distanceMiles      Float?
+  ratePerMile        Float?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  createdBy          String?
+  updatedBy          String?
+  deletedAt          DateTime?
+
+  shipper            Organization @relation("ShipperLoads", fields: [shipperId], references: [id])
+  broker             Organization @relation("BrokerLoads", fields: [brokerId], references: [id])
+  carrier            Organization? @relation("CarrierLoads", fields: [carrierId], references: [id])
+  timeline           ShipmentTimeline[]
+  rateConfirmations  RateConfirmation[]
+  pods               ProofOfDelivery[]
+}
+
+model ShipmentTimeline {
+  id        String   @id @default(uuid())
+  loadId    String
+  status    String
+  userId    String?
+  note      String?
+  timestamp DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  load      Load     @relation(fields: [loadId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model RateConfirmation {
+  id                 String   @id @default(uuid())
+  rcNumber           String   // e.g. "RC-1192"
+  loadId             String
+  baseRate           Float
+  accessorialCharges Float    @default(0.0)
+  fuelSurcharge      Float    @default(0.0)
+  detentionCharges   Float    @default(0.0)
+  notes              String?
+  versionNumber      Int      @default(1)
+  status             String   // "PENDING" | "APPROVED" | "VOID"
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  createdBy          String?
+  updatedBy          String?
+
+  load               Load     @relation(fields: [loadId], references: [id])
+}
+
+model ProofOfDelivery {
+  id             String   @id @default(uuid())
+  loadId         String
+  fileName       String
+  fileUrl        String
+  fileSize       String
+  mimeType       String
+  versionNumber  Int      @default(1)
+  approvalStatus String   // "PENDING" | "APPROVED" | "REJECTED"
+  uploadedBy     String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  load           Load     @relation(fields: [loadId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      String   // "COMPLIANCE" | "LOAD" | "RATE_CONFIRMATION" | "POD" | "PERMISSION"
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  userId         String
+  organizationId String
+  action         String
+  objectType     String
+  objectId       String
+  previousValue  String?
+  newValue       String?
+  ipAddress      String?
+  timestamp      DateTime @default(now())
+
+  user           User         @relation(fields: [userId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
+}
