@@ -105,7 +105,7 @@ export class ShippersService {
         action: 'Updated shipper account details',
         objectType: 'SHIPPER',
         objectId: id,
-        previousValue,
+        previousValue: prevValue,
         newValue: JSON.stringify(updated),
       },
     });
