@@ -1,0 +1,67 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+web_modules/
+
+# Build outputs and bundles
+dist/
+build/
+.next/
+out/
+.docusaurus/
+.svelte-kit/
+.nuxt/
+
+# SQLite databases & journals
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# System/OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs and editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.project
+.classpath
+.settings/
+
+# Temporary / Cache folders
+.npm/
+.eslintcache
+.parcel-cache/
+.turbo/
+.cache/
+.vite/
+.vercel/
+
+# TypeScript/TSConfig caches
+*.tsbuildinfo
+
+# Local configuration files
+.backend-port
