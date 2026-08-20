@@ -49,10 +49,16 @@ async function bootstrap() {
     }),
   );
 
-  // Enable CORS from environment variable
+  // Enable CORS from environment variable (with sanitization for trailing slashes & missing protocols)
   const frontendUrl = process.env.FRONTEND_URL;
   const origins = frontendUrl
-    ? frontendUrl.split(',').map((url) => url.trim())
+    ? frontendUrl.split(',').map((url) => {
+        let formatted = url.trim().replace(/\/$/, '');
+        if (!/^https?:\/\//i.test(formatted)) {
+          formatted = `https://${formatted}`;
+        }
+        return formatted;
+      })
     : ['http://localhost:5173', 'http://127.0.0.1:5173'];
 
   app.enableCors({
