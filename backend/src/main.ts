@@ -90,15 +90,15 @@ async function bootstrap() {
     console.log(`Created pods directory: ${podsPath}`);
   }
 
-  // Auto-run migrations and seeds on startup in production
+  // Auto-run database schema sync and seeds on startup in production
   if (process.env.NODE_ENV === 'production' || process.env.RUN_MIGRATIONS === 'true') {
     const { execSync } = require('child_process');
     try {
-      console.log('Running database migrations...');
-      execSync('npx prisma migrate deploy', { stdio: 'inherit' });
-      console.log('Migrations completed successfully.');
+      console.log('Synchronizing database schema (db push)...');
+      execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' });
+      console.log('Database schema synchronization completed successfully.');
     } catch (err) {
-      console.error('Database migration failed:', err);
+      console.error('Database schema synchronization failed:', err);
     }
 
     try {
