@@ -15,17 +15,18 @@ export class AuthController {
     const result = await this.authService.signup(dto);
     
     // Set refresh token in HttpOnly cookie
+    const isProd = process.env.NODE_ENV === 'production';
     res.cookie('access_token', result.tokens.accessToken, {
       httpOnly: true,
-      secure: false, // Set to true in production
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 15 * 60 * 1000, // 15 mins
     });
 
     res.cookie('refresh_token', result.tokens.refreshToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
@@ -42,17 +43,18 @@ export class AuthController {
     const result = await this.authService.login(dto);
 
     // Set cookies
+    const isProd = process.env.NODE_ENV === 'production';
     res.cookie('access_token', result.tokens.accessToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 15 * 60 * 1000, // 15 mins
     });
 
     res.cookie('refresh_token', result.tokens.refreshToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
@@ -74,17 +76,18 @@ export class AuthController {
     const tokens = await this.authService.refresh(refreshToken);
 
     // Update cookies
+    const isProd = process.env.NODE_ENV === 'production';
     res.cookie('access_token', tokens.accessToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 15 * 60 * 1000, // 15 mins
     });
 
     res.cookie('refresh_token', tokens.refreshToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
@@ -102,8 +105,17 @@ export class AuthController {
     }
 
     // Clear cookies
-    res.clearCookie('access_token');
-    res.clearCookie('refresh_token');
+    const isProd = process.env.NODE_ENV === 'production';
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
+    });
+    res.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
+    });
 
     return { success: true };
   }
